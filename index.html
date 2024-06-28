@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>micro:bit Acceleration Graph v11</title>
+    <title>micro:bit Acceleration Graph v15</title>
     <script src="https://unpkg.com/htmx.org@1.8.0/dist/htmx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/noble-device@2.2.4/dist/noble-device.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -58,15 +58,10 @@
 
         // 加速度計の特性を発見する関数
         async function discoverCharacteristics() {
-            try {
-                const accelerationService = await server.getPrimaryService(UUID_ACCELERATION_SERVICE);
-                accelerationCharacteristic = await accelerationService.getCharacteristic(UUID_ACCELERATION_DATA);
-                await accelerationCharacteristic.startNotifications();
-                accelerationCharacteristic.addEventListener('characteristicvaluechanged', onAccelerationChanged);
-            } catch (error) {
-                console.error('Error discovering characteristics:', error);
-                updateConnectionStatus('Error discovering characteristics.');
-            }
+            service_acc = await server.getPrimaryService(UUID_ACCELERATION_SERVICE);
+            char_acc = await service_acc.getCharacteristic(UUID_ACCELERATION_DATA);
+            await char_acc.startNotifications();
+            await char_acc.addEventListener('characteristicvaluechanged', onAccelerationChanged);
         }
 
         // 加速度計データを受け取ったときのイベントハンドラー
