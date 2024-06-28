@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>micro:bit Acceleration Graph v18</title>
+    <title>micro:bit Acceleration Graph v20</title>
     <script src="https://unpkg.com/htmx.org@1.8.0/dist/htmx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/noble-device@2.2.4/dist/noble-device.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -154,22 +154,6 @@
             chart.update();
         }
 
-        // 接続ボタンがクリックされたときのイベントハンドラー
-        document.getElementById('scan').addEventListener('click', () => {
-            if (!isConnected) {
-                scan();
-            } else {
-                // 接続済みなら切断処理を追加できます
-            }
-        });
-
-        document.getElementById('connectButton').addEventListener('click', () => {
-            if (!isConnected) {
-                connectToMicrobit();
-            } else {
-                // 接続済みなら切断処理を追加できます
-            }
-        });
 
         // ページがロードされたときの初期化
         window.onload = () => {
