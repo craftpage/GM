@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>micro:bit Acceleration Graph v21</title>
+    <title>micro:bit Acceleration Graph v22</title>
     <script src="https://unpkg.com/htmx.org@1.8.0/dist/htmx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/noble-device@2.2.4/dist/noble-device.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div id="connection-status">Connecting...</div>
     <button onclick="scan()">Scan</button>
     <button onclick="connect()">Connect</button>
     <button onclick="getAcceleration()">加速度の取得開始</button>
@@ -40,7 +39,7 @@
     async function scan() {
         device = await navigator.bluetooth.requestDevice({
         filters: [
-            { services: [UUID_TEMPERATURE_SERVICE, UUID_ACCELERATION_SERVICE, UUID_ILLUMINANCE_SERVICE] },
+            { services: [UUID_ACCELERATION_SERVICE] },
             { namePrefix: "BBC micro:bit" }
             ]
         });
