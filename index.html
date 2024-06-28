@@ -6,32 +6,24 @@
     <script src="https://cdn.jsdelivr.net/npm/noble-device@2.2.4/dist/noble-device.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
     <div id="connection-status">Connecting...</div>
-    <button id="connectButton">connect</button>
+    <button id="connectButton">Connect</button>
     <div id="chart-container">
         <canvas id="accelerationChart"></canvas>
     </div>
 
     <script>
-        const UUID_TEMPERATURE_SERVICE = 'e95d6100-251d-470a-a062-fa1922dfa9a8';
+        // サービスとキャラクタリスティックのUUID
         const UUID_ACCELERATION_SERVICE = 'e95d7b77-251d-470a-a062-fa1922dfa9a8';
-        const UUID_ILLUMINANCE_SERVICE = 'e95d9715-251d-470a-a062-fa1922dfa9a8';
-
-    // キャラクタリスティック UUID
-        const UUID_TEMPERATURE_DATA = 'e95d9250-251d-470a-a062-fa1922dfa9a8';
         const UUID_ACCELERATION_DATA = 'e95dca4b-251d-470a-a062-fa1922dfa9a8';
-        const UUID_ILLUMINANCE_DATA = 'e95da21b-251d-470a-a062-fa1922dfa9a8';
 
+        // グローバル変数
         let device = null;
-
-
-        // BLE スキャンと接続のための変数
+        let server = null;
         let accelerationCharacteristic = null;
-        let connectedDevice = null;
         let chart = null;
-        let isConnected = false; // 接続状態を管理するフラグ
+        let isConnected = false;
 
         // 接続ステータスを更新する関数
         function updateConnectionStatus(status) {
@@ -40,21 +32,37 @@
 
         // micro:bit に接続する関数
         async function connectToMicrobit() {
-            device = await navigator.bluetooth.requestDevice({ })
-            server = await device.gatt.connect();
+            try {
+                device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: [UUID_ACCELERATION_SERVICE] }]
+                });
+                server = await device.gatt.connect();
+                updateConnectionStatus('Connected!');
+                isConnected = true;
+                discoverCharacteristics();
+            } catch (error) {
+                console.error('Error connecting to micro:bit:', error);
+                updateConnectionStatus('Connection failed!');
+            }
         }
 
         // 加速度計の特性を発見する関数
-        async function discoverCharacteristics(device) {
-            service_acc = await server.getPrimaryService(UUID_ACCELERATION_SERVICE);
-            char_acc = await service_acc.getCharacteristic(UUID_ACCELERATION_DATA);
-            await char_acc.startNotifications();
-            await char_acc.addEventListener('characteristicvaluechanged', onAccelerationChanged);
+        async function discoverCharacteristics() {
+            try {
+                const accelerationService = await server.getPrimaryService(UUID_ACCELERATION_SERVICE);
+                accelerationCharacteristic = await accelerationService.getCharacteristic(UUID_ACCELERATION_DATA);
+                await accelerationCharacteristic.startNotifications();
+                accelerationCharacteristic.addEventListener('characteristicvaluechanged', onAccelerationChanged);
+            } catch (error) {
+                console.error('Error discovering characteristics:', error);
+            }
+        }
 
-            let x = event.target.value.getInt8(0, true);
-            let y = event.target.value.getInt8(1, true);
-            let z = event.target.value.getInt8(2, true);
-                
+        // 加速度計データを受け取ったときのイベントハンドラー
+        function onAccelerationChanged(event) {
+            const x = event.target.value.getInt8(0, true);
+            const y = event.target.value.getInt8(1, true);
+            const z = event.target.value.getInt8(2, true);
             updateChart(x, y, z);
         }
 
@@ -107,19 +115,18 @@
 
         // 接続ボタンがクリックされたときのイベントハンドラー
         document.getElementById('connectButton').addEventListener('click', () => {
-            if (!isConnected) { // 接続されていない場合のみ接続処理を実行
+            if (!isConnected) {
                 connectToMicrobit();
             } else {
-                // 接続済みの場合は切断処理を追加できます
-                // 例：disconnectFromMicrobit();
+                // 接続済みなら切断処理を追加できます
             }
         });
 
         // ページがロードされたときの初期化
         window.onload = () => {
             createChart();
+            updateConnectionStatus('Scanning for micro:bit...');
         };
     </script>
 </body>
-</html> 
 </html>
