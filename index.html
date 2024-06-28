@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>micro:bit Acceleration Graph v20</title>
+    <title>micro:bit Acceleration Graph v21</title>
     <script src="https://unpkg.com/htmx.org@1.8.0/dist/htmx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/noble-device@2.2.4/dist/noble-device.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -38,74 +38,43 @@
 
     // スキャン
     async function scan() {
-      device = await navigator.bluetooth.requestDevice({
+        device = await navigator.bluetooth.requestDevice({
         filters: [
-          { services: [UUID_TEMPERATURE_SERVICE, UUID_ACCELERATION_SERVICE, UUID_ILLUMINANCE_SERVICE] },
-          { namePrefix: "BBC micro:bit" }
-        ]
-      });
+            { services: [UUID_TEMPERATURE_SERVICE, UUID_ACCELERATION_SERVICE, UUID_ILLUMINANCE_SERVICE] },
+            { namePrefix: "BBC micro:bit" }
+            ]
+        });
     }
 
     // 接続
     async function connect() {
-      server = await device.gatt.connect();
-      alert('接続完了');
-    }
-
-    // 温度取得
-    async function getTemperature() {
-      service_temp = await server.getPrimaryService(UUID_TEMPERATURE_SERVICE);
-      char_temp = await service_temp.getCharacteristic(UUID_TEMPERATURE_DATA);
-      char_tempPeriod = await service_temp.getCharacteristic('e95d1b25-251d-470a-a062-fa1922dfa9a8');
-
-      await char_tempPeriod.writeValue(new Uint16Array([INTERVAL]));
-      await char_temp.startNotifications();
-      await char_temp.addEventListener('characteristicvaluechanged', onTemperatureChanged);
+        server = await device.gatt.connect();
+        alert('接続完了');
     }
 
     // 加速度取得
     async function getAcceleration() {
-      service_acc = await server.getPrimaryService(UUID_ACCELERATION_SERVICE);
-      char_acc = await service_acc.getCharacteristic(UUID_ACCELERATION_DATA);
-      await char_acc.startNotifications();
-      await char_acc.addEventListener('characteristicvaluechanged', onAccelerationChanged);
-    }
-
-    // 照度取得
-    async function getIlluminance() {
-      service_ill = await server.getPrimaryService(UUID_ILLUMINANCE_SERVICE);
-      char_ill = await service_ill.getCharacteristic(UUID_ILLUMINANCE_DATA);
-      await char_ill.startNotifications();
-      await char_ill.addEventListener('characteristicvaluechanged', onIlluminanceChanged);
-    }
-
-    // 温度表示
-    function onTemperatureChanged(event) {
-      let temperature = event.target.value.getUint8(0, true);
-      document.getElementById("temperature").innerText = temperature + '℃';
+        service_acc = await server.getPrimaryService(UUID_ACCELERATION_SERVICE);
+        char_acc = await service_acc.getCharacteristic(UUID_ACCELERATION_DATA);
+        await char_acc.startNotifications();
     }
 
     // 加速度表示
     function onAccelerationChanged(event) {
-      let x = event.target.value.getInt16(0, true);
-      let y = event.target.value.getInt16(2, true);
-      let z = event.target.value.getInt16(4, true);
-      updateChart(x, y, z);
-
-      document.getElementById("acceleration").innerText = `X: ${accelerationX}, Y: ${accelerationY}, Z: ${accelerationZ}`;
+        let x = event.target.value.getInt16(0, true);
+        let y = event.target.value.getInt16(2, true);
+        let z = event.target.value.getInt16(4, true);
+        updateChart(x, y, z);
     }
-
-
 
     // 切断
     async function disconnect() {
-      if (!device || !device.gatt.connected) {
-        return;
-      }
-      device.gatt.disconnect();
-      alert("切断しました。");
+        if (!device || !device.gatt.connected) {
+            return;
+        }
+        device.gatt.disconnect();
+        alert("切断しました。");
     }
-
 
         // Chart.js を初期化する関数
         function createChart() {
@@ -158,7 +127,6 @@
         // ページがロードされたときの初期化
         window.onload = () => {
             createChart();
-            updateConnectionStatus('Scanning for micro:bit...');
         };
     </script>
 </body>
