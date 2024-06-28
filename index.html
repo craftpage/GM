@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>micro:bit Acceleration Graph v22</title>
+    <title>micro:bit Acceleration Graph v23</title>
     <script src="https://unpkg.com/htmx.org@1.8.0/dist/htmx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/noble-device@2.2.4/dist/noble-device.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -63,6 +63,8 @@
         let x = event.target.value.getInt16(0, true);
         let y = event.target.value.getInt16(2, true);
         let z = event.target.value.getInt16(4, true);
+        console.log(x,y,z);
+
         updateChart(x, y, z);
     }
 
