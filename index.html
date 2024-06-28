@@ -15,6 +15,18 @@
     </div>
 
     <script>
+        const UUID_TEMPERATURE_SERVICE = 'e95d6100-251d-470a-a062-fa1922dfa9a8';
+        const UUID_ACCELERATION_SERVICE = 'e95d7b77-251d-470a-a062-fa1922dfa9a8';
+        const UUID_ILLUMINANCE_SERVICE = 'e95d9715-251d-470a-a062-fa1922dfa9a8';
+
+    // キャラクタリスティック UUID
+        const UUID_TEMPERATURE_DATA = 'e95d9250-251d-470a-a062-fa1922dfa9a8';
+        const UUID_ACCELERATION_DATA = 'e95dca4b-251d-470a-a062-fa1922dfa9a8';
+        const UUID_ILLUMINANCE_DATA = 'e95da21b-251d-470a-a062-fa1922dfa9a8';
+
+        let device = null;
+
+
         // BLE スキャンと接続のための変数
         let accelerationCharacteristic = null;
         let connectedDevice = null;
@@ -27,66 +39,23 @@
         }
 
         // micro:bit に接続する関数
-        function connectToMicrobit() {
-            noble.on('discover', device => {
-                if (device.advertisement.serviceUuids.includes('0000180a-0000-1000-8000-00805f9b34fb')) {
-                    device.connect(err => {
-                        if (err) {
-                            console.error(err);
-                            updateConnectionStatus("Connection failed!");
-                            return;
-                        }
-                        connectedDevice = device;
-                        updateConnectionStatus("Connected to micro:bit!");
-                        discoverCharacteristics(device);
-                        isConnected = true; // 接続状態を更新
-                    });
-                }
-            });
-
-            noble.startScanning([0x180a], true);
+        async function connectToMicrobit() {
+            device = await navigator.bluetooth.requestDevice({ })
+            server = await device.gatt.connect();
         }
 
         // 加速度計の特性を発見する関数
-        function discoverCharacteristics(device) {
-            device.discoverServices([0x180a], (err, services) => {
-                if (err) {
-                    console.error(err);
-                    updateConnectionStatus("Discovering characteristics failed!");
-                    return;
-                }
+        async function discoverCharacteristics(device) {
+            service_acc = await server.getPrimaryService(UUID_ACCELERATION_SERVICE);
+            char_acc = await service_acc.getCharacteristic(UUID_ACCELERATION_DATA);
+            await char_acc.startNotifications();
+            await char_acc.addEventListener('characteristicvaluechanged', onAccelerationChanged);
 
-                const accelerationService = services.find(service => service.uuid === '0000180a-0000-1000-8000-00805f9b34fb');
-                if (!accelerationService) {
-                    console.error('Acceleration service not found');
-                    updateConnectionStatus("Acceleration service not found!");
-                    return;
-                }
-
-                accelerationService.discoverCharacteristics([], (err, characteristics) => {
-                    if (err) {
-                        console.error(err);
-                        updateConnectionStatus("Discovering characteristics failed!");
-                        return;
-                    }
-
-                    accelerationCharacteristic = characteristics.find(characteristic => characteristic.uuid === '00002a38-0000-1000-8000-00805f9b34fb');
-                    if (!accelerationCharacteristic) {
-                        console.error('Acceleration characteristic not found');
-                        updateConnectionStatus("Acceleration characteristic not found!");
-                        return;
-                    }
-
-                    // データ受信イベントを設定
-                    accelerationCharacteristic.on('read', data => {
-                        const values = data.toString().split(',');
-                        const x = parseFloat(values[0]);
-                        const y = parseFloat(values[1]);
-                        const z = parseFloat(values[2]);
-                        updateChart(x, y, z);
-                    });
-                });
-            });
+            let x = event.target.value.getInt8(0, true);
+            let y = event.target.value.getInt8(1, true);
+            let z = event.target.value.getInt8(2, true);
+                
+            updateChart(x, y, z);
         }
 
         // Chart.js を初期化する関数
