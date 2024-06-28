@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>micro:bit Acceleration Graph v24</title>
+    <title>micro:bit Acceleration Graph v25</title>
     <script src="https://unpkg.com/htmx.org@1.8.0/dist/htmx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/noble-device@2.2.4/dist/noble-device.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -55,13 +55,15 @@
         service_acc = await server.getPrimaryService(UUID_ACCELERATION_SERVICE);
         char_acc = await service_acc.getCharacteristic(UUID_ACCELERATION_DATA);
         await char_acc.startNotifications();
+        await char_acc.addEventListener('characteristicvaluechanged', onAccelerationChanged);
+
     }
 
     // 加速度表示
     function onAccelerationChanged(event) {
-        let x = event.target.value.getInt16(0, true);
-        let y = event.target.value.getInt16(2, true);
-        let z = event.target.value.getInt16(4, true);
+        let x = event.target.value.getInt8(0, true);
+        let y = event.target.value.getInt8(1, true);
+        let z = event.target.value.getInt8(2, true);
         console.log(x,y,z);
 
         updateChart(x, y, z);
