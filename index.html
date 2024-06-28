@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>micro:bit Acceleration Graph</title>
+    <script src="https://unpkg.com/htmx.org@1.8.0/dist/htmx.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/noble-device@2.2.4/dist/noble-device.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div id="connection-status">Connecting...</div>
+    <button id="connectButton">connect</button>
+    <div id="chart-container">
+        <canvas id="accelerationChart"></canvas>
+    </div>
+
+    <script>
+        // BLE スキャンと接続のための変数
+        let accelerationCharacteristic = null;
+        let connectedDevice = null;
+        let chart = null;
+        let isConnected = false; // 接続状態を管理するフラグ
+
+        // 接続ステータスを更新する関数
+        function updateConnectionStatus(status) {
+            document.getElementById('connection-status').textContent = status;
+        }
+
+        // micro:bit に接続する関数
+        function connectToMicrobit() {
+            noble.on('discover', device => {
+                if (device.advertisement.serviceUuids.includes('0000180a-0000-1000-8000-00805f9b34fb')) {
+                    device.connect(err => {
+                        if (err) {
+                            console.error(err);
+                            updateConnectionStatus("Connection failed!");
+                            return;
+                        }
+                        connectedDevice = device;
+                        updateConnectionStatus("Connected to micro:bit!");
+                        discoverCharacteristics(device);
+                        isConnected = true; // 接続状態を更新
+                    });
+                }
+            });
+
+            noble.startScanning([0x180a], true);
+        }
+
+        // 加速度計の特性を発見する関数
+        function discoverCharacteristics(device) {
+            device.discoverServices([0x180a], (err, services) => {
+                if (err) {
+                    console.error(err);
+                    updateConnectionStatus("Discovering characteristics failed!");
+                    return;
+                }
+
+                const accelerationService = services.find(service => service.uuid === '0000180a-0000-1000-8000-00805f9b34fb');
+                if (!accelerationService) {
+                    console.error('Acceleration service not found');
+                    updateConnectionStatus("Acceleration service not found!");
+                    return;
+                }
+
+                accelerationService.discoverCharacteristics([], (err, characteristics) => {
+                    if (err) {
+                        console.error(err);
+                        updateConnectionStatus("Discovering characteristics failed!");
+                        return;
+                    }
+
+                    accelerationCharacteristic = characteristics.find(characteristic => characteristic.uuid === '00002a38-0000-1000-8000-00805f9b34fb');
+                    if (!accelerationCharacteristic) {
+                        console.error('Acceleration characteristic not found');
+                        updateConnectionStatus("Acceleration characteristic not found!");
+                        return;
+                    }
+
+                    // データ受信イベントを設定
+                    accelerationCharacteristic.on('read', data => {
+                        const values = data.toString().split(',');
+                        const x = parseFloat(values[0]);
+                        const y = parseFloat(values[1]);
+                        const z = parseFloat(values[2]);
+                        updateChart(x, y, z);
+                    });
+                });
+            });
+        }
+
+        // Chart.js を初期化する関数
+        function createChart() {
+            const chartCanvas = document.getElementById('accelerationChart');
+            chart = new Chart(chartCanvas, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'X',
+                            data: [],
+                            borderColor: 'red',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Y',
+                            data: [],
+                            borderColor: 'green',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Z',
+                            data: [],
+                            borderColor: 'blue',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // グラフを更新する関数
+        function updateChart(x, y, z) {
+            chart.data.labels.push(Date.now());
+            chart.data.datasets[0].data.push(x);
+            chart.data.datasets[1].data.push(y);
+            chart.data.datasets[2].data.push(z);
+            chart.update();
+        }
+
+        // 接続ボタンがクリックされたときのイベントハンドラー
+        document.getElementById('connectButton').addEventListener('click', () => {
+            if (!isConnected) { // 接続されていない場合のみ接続処理を実行
+                connectToMicrobit();
+            } else {
+                // 接続済みの場合は切断処理を追加できます
+                // 例：disconnectFromMicrobit();
+            }
+        });
+
+        // ページがロードされたときの初期化
+        window.onload = () => {
+            createChart();
+        };
+    </script>
+</body>
+</html> 
+</html>
