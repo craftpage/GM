@@ -34,7 +34,6 @@
         async function connectToMicrobit() {
             try {
                 device = await navigator.bluetooth.requestDevice({
-                    filters: [{ services: [UUID_ACCELERATION_SERVICE] }]
                 });
                 server = await device.gatt.connect();
                 updateConnectionStatus('Connected!');
