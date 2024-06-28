@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>micro:bit Acceleration Graph</title>
+    <title>micro:bit Acceleration Graph v7</title>
     <script src="https://unpkg.com/htmx.org@1.8.0/dist/htmx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/noble-device@2.2.4/dist/noble-device.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -9,7 +9,7 @@
 <body>
     <div id="connection-status">Connecting...</div>
     <button id="scan">Scan</button>
-    <button id="connectButton">Connect</button>
+    <button id="connectButton" disabled>Connect</button>
     <div id="chart-container">
         <canvas id="accelerationChart"></canvas>
     </div>
@@ -31,20 +31,33 @@
             document.getElementById('connection-status').textContent = status;
         }
 
+        // スキャン
         async function scan() {
-            device = await navigator.bluetooth.requestDevice({
-            //true filters: [
-            //  { services: [UUID_TEMPERATURE_SERVICE, UUID_ACCELERATION_SERVICE, UUID_ILLUMINANCE_SERVICE] },
-            //  { namePrefix: "BBC micro:bit" }
-            //]
-        });
+            try {
+                device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: [UUID_ACCELERATION_SERVICE] }], // サービスでフィルター
+                    optionalServices: [UUID_ACCELERATION_SERVICE] // オプションサービス
+                });
+                updateConnectionStatus('Device found. Connecting...');
+                document.getElementById('connectButton').disabled = false;
+            } catch (error) {
+                console.error('Error scanning for devices:', error);
+                updateConnectionStatus('Error scanning. Please try again.');
+            }
         }
 
-    // 接続
+        // 接続
         // micro:bit に接続する関数
         async function connectToMicrobit() {
-        server = await device.gatt.connect();
-        alert('接続完了');
+            try {
+                server = await device.gatt.connect();
+                updateConnectionStatus('Connected to device.');
+                await discoverCharacteristics();
+                isConnected = true;
+            } catch (error) {
+                console.error('Error connecting to device:', error);
+                updateConnectionStatus('Error connecting. Please try again.');
+            }
         }
 
 
@@ -57,6 +70,7 @@
                 accelerationCharacteristic.addEventListener('characteristicvaluechanged', onAccelerationChanged);
             } catch (error) {
                 console.error('Error discovering characteristics:', error);
+                updateConnectionStatus('Error discovering characteristics.');
             }
         }
 
@@ -126,7 +140,7 @@
 
         document.getElementById('connectButton').addEventListener('click', () => {
             if (!isConnected) {
-                scan();
+                connectToMicrobit();
             } else {
                 // 接続済みなら切断処理を追加できます
             }
