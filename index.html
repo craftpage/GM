@@ -8,6 +8,7 @@
 </head>
 <body>
     <div id="connection-status">Connecting...</div>
+    <button id="scan">Scan</button>
     <button id="connectButton">Connect</button>
     <div id="chart-container">
         <canvas id="accelerationChart"></canvas>
@@ -30,20 +31,22 @@
             document.getElementById('connection-status').textContent = status;
         }
 
+        async function scan() {
+            device = await navigator.bluetooth.requestDevice({
+            //true filters: [
+            //  { services: [UUID_TEMPERATURE_SERVICE, UUID_ACCELERATION_SERVICE, UUID_ILLUMINANCE_SERVICE] },
+            //  { namePrefix: "BBC micro:bit" }
+            //]
+        });
+        }
+
+    // 接続
         // micro:bit に接続する関数
         async function connectToMicrobit() {
-            try {
-                device = await navigator.bluetooth.requestDevice({
-                });
-                server = await device.gatt.connect();
-                updateConnectionStatus('Connected!');
-                isConnected = true;
-                discoverCharacteristics();
-            } catch (error) {
-                console.error('Error connecting to micro:bit:', error);
-                updateConnectionStatus('Connection failed!');
-            }
+        server = await device.gatt.connect();
+        alert('接続完了');
         }
+
 
         // 加速度計の特性を発見する関数
         async function discoverCharacteristics() {
@@ -113,9 +116,17 @@
         }
 
         // 接続ボタンがクリックされたときのイベントハンドラー
+        document.getElementById('scan').addEventListener('click', () => {
+            if (!isConnected) {
+                scan();
+            } else {
+                // 接続済みなら切断処理を追加できます
+            }
+        });
+
         document.getElementById('connectButton').addEventListener('click', () => {
             if (!isConnected) {
-                connectToMicrobit();
+                scan();
             } else {
                 // 接続済みなら切断処理を追加できます
             }
