@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>micro:bit Acceleration Graph v8</title>
+    <title>micro:bit Acceleration Graph v7</title>
     <script src="https://unpkg.com/htmx.org@1.8.0/dist/htmx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/noble-device@2.2.4/dist/noble-device.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -35,7 +35,10 @@
         async function scan() {
             try {
                 device = await navigator.bluetooth.requestDevice({
-                });
+                    filters: [
+                    { services: [UUID_ACCELERATION_SERVICE] },
+                    { namePrefix: "BBC micro:bit" }
+                ]});
                 updateConnectionStatus('Device found. Connecting...');
                 document.getElementById('connectButton').disabled = false;
             } catch (error) {
